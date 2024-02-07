@@ -202,13 +202,15 @@ client.on("messageCreate", async (message) => {
           try {
             let count = parseInt(args[1]);
             if(client.loop) {
-              let temp = client.queue.slice(0, count);
-              client.queue = client.queue.slice(count);
-              for(let i = 0; i < temp.length; i++) {
-                client.queue.push(temp[i]);
+              for (let i = 0; i < count; i++) {
+                let song = client.queue[0];
+                client.queue.shift();
+                client.queue.push(song);
               }
             } else {
-              client.queue = client.queue.slice(count);
+              if(client.queue.length > 0) {
+                client.queue.shift();
+              }
             }
           } catch (e) {
             message.channel.send(`Vui lòng nhập số bài muốn skip.`);
@@ -302,6 +304,9 @@ client.on("messageCreate", async (message) => {
         client.loop = false;
         message.channel.send("Ngưng lặp list nhạc.");
       }
+      break;
+    case "help":
+      message.channel.send(`Danh sách lệnh của bot: \n>${prefix}play *link hoặc tên bài hát*: phát nhạc theo tên hoặc link\n>${prefix}loop: bật hoặc tắt lặp playlist\n>${prefix}skip (*số bài hát*): skip bài hát đang phát và trong playlist\n>${prefix}queue: xem playlist bài hát\n>${prefix}remove: xóa bài hát vừa thêm vào\n>${prefix}pause: tạm dừng phát nhạc\n>${prefix}resume: tiếp tục phát nhạc\n>${prefix}stop: kết thúc phát nhạc\n>${prefix}now: xem bài hát đang được phát\n>${prefix}clear: xóa toàn bộ list nhạc\n>${prefix}join: yêu cầu bot tham gia voice\n${prefix}leave: yêu cầu bot thoát voice`);
       break;
   }
   } catch(e) {
