@@ -6,7 +6,7 @@ var request = require('request');
 //require('dotenv').config()
 
 
-const prefix = "!";
+const prefix = "-";
 
 const client = new Client({
   checkUpdate: false,
