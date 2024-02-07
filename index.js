@@ -114,7 +114,7 @@ client.on("messageCreate", async (message) => {
     case "play":
     case "p":
     case "pl":
-      if(!message.member.voice) {
+      if(!message.member.voice.channel) {
         message.channel.send("Bạn phải ở trong voice để thực hiện lệnh này!");
       } else {
         if(!(args.length > 1)) {
