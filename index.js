@@ -5,7 +5,7 @@ const play = require('play-dl');
 var request = require('request');
 
 
-const prefix = "!";
+const prefix = "-";
 
 const client = new Client({
   checkUpdate: false,
