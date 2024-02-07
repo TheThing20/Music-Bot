@@ -3,9 +3,10 @@ const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioReso
 const keepAlive = require("./server.js");
 const play = require('play-dl');
 var request = require('request');
+//require('dotenv').config()
 
 
-const prefix = "-";
+const prefix = "!";
 
 const client = new Client({
   checkUpdate: false,
@@ -58,6 +59,32 @@ function song(s, id) {
     }, 100);
 }
 
+
+function playlist(s, id) {
+  let obj = {token: null};
+  get_token(obj);
+  setInterval(function(){
+    if(obj.token != null) {
+      clearInterval(this);
+      request({
+        url: `https://api.spotify.com/v1/playlists/${id}`,
+        method: "GET",
+        headers: {"Authorization": "Bearer "+obj.token}
+    }, function (error, response, body){
+      s.list = [];
+      s.name = JSON.parse(body)["name"];
+      for (var i = 0; i < JSON.parse(body)["tracks"]["items"].length; i++) {
+        let str = JSON.parse(body)["tracks"]["items"][i]["track"]["name"] + " by ";
+        for (var j = 0; j < JSON.parse(body)["tracks"]["items"][i]["track"]["artists"].length; j++) {
+          str += JSON.parse(body)["tracks"]["items"][i]["track"]["artists"][j]["name"] + ", ";
+        }
+        str = str.slice(0, str.length - 2);
+        s.list.push(str);
+      }
+    });
+    }
+  }, 100);
+}
 
 client.on("ready", async () => {
   console.log(client.user.tag + " is ready!");
@@ -133,7 +160,7 @@ client.on("messageCreate", async (message) => {
         })
         }
         message.channel.send(`Đang tìm bài hát...`)
-        if(name.startsWith("https://www.youtube") || name.startsWith("https://youtube") || name.startsWith("https://youtu.be")) {
+        if(name.startsWith("https://www.youtube.com/watch") || name.startsWith("https://youtube.com/watch") || name.startsWith("https://youtu.be")) {
           try {
             let info = await play.video_info(name);
             client.queue.push({"url": info.video_details.url, "title": info.video_details.title});
@@ -145,7 +172,21 @@ client.on("messageCreate", async (message) => {
           } catch (e) {
             message.channel.send(`Không tìm thấy bài hát.`)
           }
+        } else if(name.startsWith("https://www.youtube.com/playlist") || name.startsWith("https://youtube.com/playlist")) {
+          try {
+          const playlist = await play.playlist_info(name, { incomplete : true })
+          for (let i = 0; i < playlist.videos.length; i++) {
+            client.queue.push({"url": playlist.videos[i].url, "title": playlist.videos[i].title});
+          }
+          message.channel.send(`Đã thêm playlist **[${playlist.title}](${playlist.url})** vào list nhạc.`)
+          if(!client.isPlaying && !client.isPaused) {
+            await plays(message);
+          }
+        } catch (e) {
+          message.channel.send(`Không tìm thấy playlist.`)
+        }
         } else if(name.startsWith("https://open.spotify.com/track/")) {
+          try {
             let id = name.replace("https://open.spotify.com/track/", "")
             let obj = {song: null}
             song(obj, id)
@@ -166,6 +207,32 @@ client.on("messageCreate", async (message) => {
                 }
               }
             }, 100);
+          } catch(e) {
+            message.channel.send(`Không tìm thấy bài hát.`)
+          }
+          } else if(name.startsWith("https://open.spotify.com/playlist/")) {
+            try {
+              let id = name.replace("https://open.spotify.com/playlist/", "")
+              let obj = {list: null, name: null}
+              playlist(obj, id)
+              let inter = setInterval(async () => {
+                if(obj.name != null) {
+                  clearInterval(inter);
+                  for(let i = 0; i < obj.list.length; i++) {
+                    let sname = obj.list[i];
+                    const search = await play.search(sname, {  source : { youtube : "video" } });
+                    let song = search[0];
+                    client.queue.push({"url": song.url, "title": song.title});
+                  }
+                  message.channel.send(`Đã thêm playlist **[${obj.name}](${name})** vào list nhạc.`)
+                  if(!client.isPlaying && !client.isPaused) {
+                    await plays(message);
+                  }
+                }
+              }, 100);
+            } catch(e) {
+              message.channel.send(`Không tìm thấy playlist.`)
+            }
           } else {
           const search = await play.search(name, {  source : { youtube : "video" } });
           if(search.length == 0) {
@@ -191,8 +258,27 @@ client.on("messageCreate", async (message) => {
         message.channel.send(`Không có bài hát trong queue.`)
       } else {
         let songs = "";
+        if(args.length > 1) {
+          try {
+            let count = parseInt(args[1]);
+            if(count < 1) throw new Error();
+              for(var i = (count - 1)*10+0; i < client.queue.length; i++) {
+                songs += `#${i+1} - **${client.queue[i]["title"]}**\n`
+                if(i >= (count - 1)*10+9) {
+                  break;
+                }
+            }
+          } catch (e) {
+            message.channel.send(`Vui lòng nhập đúng số trang.`);
+            return;
+          }
+        } else {
         for(var i = 0; i < client.queue.length; i++) {
           songs += `#${i+1} - **${client.queue[i]["title"]}**\n`
+          if(i >= 9) {
+            break;
+          }
+        }
         }
         message.channel.send(`Danh sách nhạc trong queue:\n${songs}`);
       }
@@ -209,8 +295,10 @@ client.on("messageCreate", async (message) => {
                 client.queue.push(song);
               }
             } else {
-              if(client.queue.length > 0) {
-                client.queue.shift();
+              for (let i = 0; i < count; i++) {
+                if(client.queue.length > 0) {
+                  client.queue.shift();
+                }
               }
             }
           } catch (e) {
