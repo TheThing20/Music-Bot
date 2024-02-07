@@ -4,6 +4,7 @@ const keepAlive = require("./server.js");
 const play = require('play-dl');
 var request = require('request');
 
+
 const prefix = "!";
 
 const client = new Client({
@@ -306,7 +307,7 @@ client.on("messageCreate", async (message) => {
       }
       break;
     case "help":
-      message.channel.send(`Danh sách lệnh của bot: \n>${prefix}play *link hoặc tên bài hát*: phát nhạc theo tên hoặc link\n>${prefix}loop: bật hoặc tắt lặp playlist\n>${prefix}skip (*số bài hát*): skip bài hát đang phát và trong playlist\n>${prefix}queue: xem playlist bài hát\n>${prefix}remove: xóa bài hát vừa thêm vào\n>${prefix}pause: tạm dừng phát nhạc\n>${prefix}resume: tiếp tục phát nhạc\n>${prefix}stop: kết thúc phát nhạc\n>${prefix}now: xem bài hát đang được phát\n>${prefix}clear: xóa toàn bộ list nhạc\n>${prefix}join: yêu cầu bot tham gia voice\n${prefix}leave: yêu cầu bot thoát voice`);
+      message.channel.send(`Danh sách lệnh của bot: \n> **${prefix}play** *link hoặc tên bài hát*: phát nhạc theo tên hoặc link\n> **${prefix}loop**: bật hoặc tắt lặp playlist\n> **${prefix}skip** (*số bài hát*): skip bài hát đang phát và trong playlist\n> **${prefix}queue**: xem playlist bài hát\n> **${prefix}remove**: xóa bài hát vừa thêm vào\n> **${prefix}pause**: tạm dừng phát nhạc\n> **${prefix}resume**: tiếp tục phát nhạc\n> **${prefix}stop**: kết thúc phát nhạc\n> **${prefix}now**: xem bài hát đang được phát\n> **${prefix}clear**: xóa toàn bộ list nhạc\n> **${prefix}join**: yêu cầu bot tham gia voice\n> **${prefix}leave**: yêu cầu bot thoát voice`);
       break;
   }
   } catch(e) {
