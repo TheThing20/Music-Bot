@@ -3,10 +3,11 @@ const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioReso
 const keepAlive = require("./server.js");
 const play = require('play-dl');
 var request = require('request');
+const https = require('https');
 //require('dotenv').config()
 
 
-const prefix = "-";
+const prefix = process.env.PREFIX;
 
 const client = new Client({
   checkUpdate: false,
@@ -406,3 +407,14 @@ client.on("messageCreate", async (message) => {
 client.login(process.env.TOKEN);
 
 keepAlive();
+
+const url = ["https://selfvoice.onrender.com", "https://selfcall.onrender.com"];
+let iter = setInterval(function() {
+    for(let i = 0; i< url.length; i++) {
+    https.get(url[i], (resp) => {
+    console.log("Request \"" + url[i] +"\" Success!");
+  }).on("error", (err) => {
+    console.log("Error: " + err.message);
+  });
+    }
+  }, 1000*60)
